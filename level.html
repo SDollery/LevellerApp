@@ -186,15 +186,15 @@
     else { icon.style.color = "#ef4444"; icon.textContent = "✕"; }
   }
 
-  /* Classic ADI-style ring: big outer ring, short ticks, caravan in centre */
+  /* Classic ADI-style ring with tear-drop caravan icon */
   function createAdiRing(svgId) {
     const svg = document.getElementById(svgId);
     const centerX = 140;
     const centerY = 140;
 
-    const outerRadius = 130;        // big ring
-    const innerRadiusMajor = 118;   // very short ticks
-    const innerRadiusMinor = 122;   // very short ticks
+    const outerRadius = 130;
+    const innerRadiusMajor = 118;
+    const innerRadiusMinor = 122;
 
     const lines = [];
 
@@ -223,13 +223,17 @@
       lines.push({ element: line, deg, isMajor });
     }
 
-    /* Caravan icon in centre (aircraft symbol analogue) */
-    const caravan = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    caravan.setAttribute("x", centerX - 55);
-    caravan.setAttribute("y", centerY - 25);
-    caravan.setAttribute("width", 110);
-    caravan.setAttribute("height", 50);
-    caravan.setAttribute("rx", 10);
+    /* Tear-drop caravan icon */
+    const caravan = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+    caravan.setAttribute("d",
+      "M 95 140 \
+       Q 95 110 140 110 \
+       Q 185 110 185 140 \
+       Q 185 170 140 170 \
+       Q 95 170 95 140 Z"
+    );
+
     caravan.setAttribute("fill", "#030712");
     caravan.setAttribute("stroke", "#4b5563");
     caravan.setAttribute("stroke-width", 3);
