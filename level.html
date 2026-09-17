@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Caravan Leveller</title>
+<title>LevelUp by NOMAD</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -39,14 +39,14 @@
     padding: 12px 16px;
     border-bottom: 1px solid #374151;
   }
-  .topbar-left {
-    display: flex;
-    flex-direction: column;
+
+  .topbar-center {
+    flex: 1;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
   }
-  .device-name {
-    font-size: 16px;
-    font-weight: 600;
-  }
+
   .connection-status {
     font-size: 12px;
     color: var(--muted);
@@ -54,6 +54,7 @@
     align-items: center;
     gap: 6px;
   }
+
   .gear {
     font-size: 22px;
     cursor: pointer;
@@ -174,15 +175,17 @@
 
 <!-- Top Bar -->
 <div class="topbar">
-  <div class="topbar-left">
-    <div class="device-name">Caravan Leveller</div>
 
-    <div class="connection-status" id="conn-status">
-      <span id="conn-icon" style="color:#22c55e;">✔️</span>
-      <span id="conn-text">Wi‑Fi Connected</span>
-    </div>
+  <!-- Left: Network indicator -->
+  <div class="connection-status" id="conn-status">
+    <span>Network:</span>
+    <span id="conn-icon" style="color:#22c55e;">✔️</span>
   </div>
 
+  <!-- Center: App name -->
+  <div class="topbar-center">LevelUp by NOMAD</div>
+
+  <!-- Right: Settings -->
   <div class="gear">⚙️</div>
 </div>
 
@@ -237,19 +240,22 @@
   /* Connection indicator logic */
   function setConnection(mode) {
     const icon = document.getElementById("conn-icon");
-    const text = document.getElementById("conn-text");
 
     if (mode === "wifi") {
       icon.style.color = "#22c55e"; // green
-      text.textContent = "Wi‑Fi Connected";
+      icon.textContent = "✔️";
     }
     else if (mode === "ble") {
       icon.style.color = "#3b82f6"; // blue
-      text.textContent = "Bluetooth Connected";
+      icon.textContent = "✔️";
     }
     else if (mode === "ap") {
       icon.style.color = "#f59e0b"; // orange
-      text.textContent = "AP Mode Active";
+      icon.textContent = "✔️";
+    }
+    else if (mode === "offline") {
+      icon.style.color = "#ef4444"; // red
+      icon.textContent = "❌";
     }
   }
 
@@ -282,6 +288,7 @@
   // setConnection("wifi");
   // setConnection("ble");
   // setConnection("ap");
+  // setConnection("offline");
 
 </script>
 
