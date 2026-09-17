@@ -99,8 +99,8 @@
   }
 
   .ring-svg {
-    width: 200px;
-    height: 200px;
+    width: 240px;
+    height: 240px;
   }
 
   .angle-readout {
@@ -133,20 +133,17 @@
 <!-- Top Bar -->
 <div class="topbar">
 
-  <!-- Left: Network indicator -->
   <div class="connection-status" id="conn-status">
     <span>Network:</span>
     <span id="conn-icon" style="color: var(--green); font-weight: 700;">✓</span>
   </div>
 
-  <!-- Center: App name -->
   <div class="topbar-center">
     <span style="font-size: 18px; font-weight: 700;">LevelUp</span>
     <span style="font-size: 16px; opacity: 0.8;">by</span>
     <span style="font-size: 18px; font-weight: 700;">NOMAD</span>
   </div>
 
-  <!-- Right: Settings -->
   <div class="gear">⚙️</div>
 </div>
 
@@ -158,20 +155,19 @@
     <!-- Pitch Ring -->
     <div class="ring-block">
       <div class="ring-title">FRONT‑TO‑BACK (PITCH)</div>
-      <svg id="pitch-svg" class="ring-svg" viewBox="0 0 200 200"></svg>
+      <svg id="pitch-svg" class="ring-svg" viewBox="0 0 240 240"></svg>
       <div class="angle-readout" id="pitch-readout">0.0°</div>
     </div>
 
     <!-- Roll Ring -->
     <div class="ring-block">
       <div class="ring-title">LEFT‑TO‑RIGHT (ROLL)</div>
-      <svg id="roll-svg" class="ring-svg" viewBox="0 0 200 200"></svg>
+      <svg id="roll-svg" class="ring-svg" viewBox="0 0 240 240"></svg>
       <div class="angle-readout" id="roll-readout">0.0°</div>
     </div>
 
   </div>
 
-  <!-- Status Row -->
   <div class="status-row">
     <div class="status-item">Sensor OK</div>
     <div class="status-item">Power: USB‑C</div>
@@ -182,42 +178,28 @@
 </div>
 
 <script>
-  /* Connection indicator logic */
   function setConnection(mode) {
     const icon = document.getElementById("conn-icon");
-
-    if (mode === "wifi") {
-      icon.style.color = "#22c55e"; // green
-      icon.textContent = "✓";
-    }
-    else if (mode === "ble") {
-      icon.style.color = "#3b82f6"; // blue
-      icon.textContent = "✓";
-    }
-    else if (mode === "ap") {
-      icon.style.color = "#f59e0b"; // orange
-      icon.textContent = "✓";
-    }
-    else if (mode === "offline") {
-      icon.style.color = "#ef4444"; // red
-      icon.textContent = "✕";
-    }
+    if (mode === "wifi") { icon.style.color = "#22c55e"; icon.textContent = "✓"; }
+    else if (mode === "ble") { icon.style.color = "#3b82f6"; icon.textContent = "✓"; }
+    else if (mode === "ap") { icon.style.color = "#f59e0b"; icon.textContent = "✓"; }
+    else { icon.style.color = "#ef4444"; icon.textContent = "✕"; }
   }
 
-  /* Radial ring setup: hybrid 10° major, 5° minor */
+  /* Create radial ring with shorter lines + caravan icon inside */
   function createRadialRing(svgId) {
     const svg = document.getElementById(svgId);
-    const centerX = 100;
-    const centerY = 100;
-    const outerRadius = 90;
-    const innerRadiusMajor = 60;
-    const innerRadiusMinor = 70;
+    const centerX = 120;
+    const centerY = 120;
+
+    const outerRadius = 110;
+    const innerRadiusMajor = 80;   // shortened
+    const innerRadiusMinor = 90;   // shortened
 
     const lines = [];
 
     for (let deg = 0; deg < 360; deg += 5) {
-      const rad = (deg - 90) * Math.PI / 180; // rotate so 0° is at top
-
+      const rad = (deg - 90) * Math.PI / 180;
       const isMajor = deg % 10 === 0;
 
       const rInner = isMajor ? innerRadiusMajor : innerRadiusMinor;
@@ -238,9 +220,22 @@
       line.setAttribute("stroke-linecap", "round");
 
       svg.appendChild(line);
-
       lines.push({ element: line, deg, isMajor });
     }
+
+    /* Caravan icon inside ring */
+    const caravan = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    caravan.setAttribute("x", centerX - 45);
+    caravan.setAttribute("y", centerY - 20);
+    caravan.setAttribute("width", 90);
+    caravan.setAttribute("height", 40);
+    caravan.setAttribute("rx", 8);
+    caravan.setAttribute("fill", "#030712");
+    caravan.setAttribute("stroke", "#4b5563");
+    caravan.setAttribute("stroke-width", 3);
+    caravan.setAttribute("id", svgId + "-caravan");
+
+    svg.appendChild(caravan);
 
     return lines;
   }
@@ -250,27 +245,23 @@
 
   function classifyColour(angle) {
     const abs = Math.abs(angle);
-    if (abs < 1) return "#22c55e";   // green
-    if (abs < 3) return "#f59e0b";   // amber
-    return "#ef4444";                // red
+    if (abs < 1) return "#22c55e";
+    if (abs < 3) return "#f59e0b";
+    return "#ef4444";
   }
 
-  function updateRadialRing(lines, angle) {
-    // Find closest 5° segment to angle
+  function updateRadialRing(lines, angle, caravanId) {
     let targetDeg = Math.round(angle / 5) * 5;
-    // Normalize to 0–360
     targetDeg = ((targetDeg % 360) + 360) % 360;
 
     const colour = classifyColour(angle);
 
     lines.forEach(l => {
-      // base style
       const baseWidth = l.isMajor ? 2 : 1.2;
       l.element.setAttribute("stroke-width", baseWidth);
       l.element.setAttribute("stroke", "#4b5563");
     });
 
-    // Highlight target and neighbours
     lines.forEach(l => {
       const diff = Math.min(
         Math.abs(l.deg - targetDeg),
@@ -285,27 +276,28 @@
         l.element.setAttribute("stroke", colour);
       }
     });
+
+    /* Tilt caravan icon */
+    const caravan = document.getElementById(caravanId);
+    caravan.setAttribute("transform", `rotate(${angle}, 120, 120)`);
   }
 
-  /* Angle update logic */
   function updateAngles(pitch, roll) {
     document.getElementById("pitch-readout").textContent = pitch.toFixed(1) + "°";
     document.getElementById("roll-readout").textContent = roll.toFixed(1) + "°";
 
-    updateRadialRing(pitchLines, pitch);
-    updateRadialRing(rollLines, roll);
+    updateRadialRing(pitchLines, pitch, "pitch-svg-caravan");
+    updateRadialRing(rollLines, roll, "roll-svg-caravan");
   }
 
-  /* Demo movement */
   let demoAngle = 0;
   setInterval(() => {
-    demoAngle = (demoAngle + 0.3) % 40; // small oscillation
-    const pitch = demoAngle - 20;       // -20 to +20
+    demoAngle = (demoAngle + 0.3) % 40;
+    const pitch = demoAngle - 20;
     const roll = (demoAngle * 0.7) - 14;
     updateAngles(pitch, roll);
   }, 500);
 
-  // Example connection mode
   setConnection("wifi");
 </script>
 
