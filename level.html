@@ -72,14 +72,12 @@
     justify-content: space-evenly;
   }
 
-  /* Ring + Van */
   .ring-container {
     display: flex;
     flex-direction: column;
     gap: 24px;
   }
 
-  /* Landscape layout */
   @media (orientation: landscape) {
     .ring-container {
       flex-direction: row;
@@ -100,46 +98,16 @@
     color: var(--muted);
   }
 
-  .ring {
-    width: 180px;
-    height: 180px;
-    border-radius: 999px;
-    border: 6px solid var(--green);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+  .ring-svg {
+    width: 200px;
+    height: 200px;
   }
-
-  .ring.red { border-color: var(--red); }
-  .ring.amber { border-color: var(--amber); }
-
-  .van {
-    width: 110px;
-    height: 60px;
-    border-radius: 10px;
-    border: 3px solid #4b5563;
-    position: relative;
-    background: #030712;
-  }
-  .wheel {
-    width: 14px;
-    height: 14px;
-    background: #4b5563;
-    border-radius: 999px;
-    position: absolute;
-    bottom: -8px;
-  }
-  .wheel.left { left: 20px; }
-  .wheel.right { right: 20px; }
 
   .angle-readout {
-    position: absolute;
-    bottom: -28px;
+    margin-top: 6px;
     font-size: 14px;
     color: var(--muted);
     text-align: center;
-    width: 100%;
   }
 
   /* Status Row */
@@ -157,7 +125,6 @@
     font-size: 12px;
     color: var(--muted);
   }
-
 </style>
 </head>
 
@@ -191,25 +158,15 @@
     <!-- Pitch Ring -->
     <div class="ring-block">
       <div class="ring-title">FRONT‑TO‑BACK (PITCH)</div>
-      <div class="ring green" id="pitch-ring">
-        <div class="van">
-          <div class="wheel left"></div>
-          <div class="wheel right"></div>
-        </div>
-        <div class="angle-readout" id="pitch-readout">0.0°</div>
-      </div>
+      <svg id="pitch-svg" class="ring-svg" viewBox="0 0 200 200"></svg>
+      <div class="angle-readout" id="pitch-readout">0.0°</div>
     </div>
 
     <!-- Roll Ring -->
     <div class="ring-block">
       <div class="ring-title">LEFT‑TO‑RIGHT (ROLL)</div>
-      <div class="ring green" id="roll-ring">
-        <div class="van">
-          <div class="wheel left"></div>
-          <div class="wheel right"></div>
-        </div>
-        <div class="angle-readout" id="roll-readout">0.0°</div>
-      </div>
+      <svg id="roll-svg" class="ring-svg" viewBox="0 0 200 200"></svg>
+      <div class="angle-readout" id="roll-readout">0.0°</div>
     </div>
 
   </div>
@@ -247,31 +204,109 @@
     }
   }
 
+  /* Radial ring setup: hybrid 10° major, 5° minor */
+  function createRadialRing(svgId) {
+    const svg = document.getElementById(svgId);
+    const centerX = 100;
+    const centerY = 100;
+    const outerRadius = 90;
+    const innerRadiusMajor = 60;
+    const innerRadiusMinor = 70;
+
+    const lines = [];
+
+    for (let deg = 0; deg < 360; deg += 5) {
+      const rad = (deg - 90) * Math.PI / 180; // rotate so 0° is at top
+
+      const isMajor = deg % 10 === 0;
+
+      const rInner = isMajor ? innerRadiusMajor : innerRadiusMinor;
+      const rOuter = outerRadius;
+
+      const x1 = centerX + rInner * Math.cos(rad);
+      const y1 = centerY + rInner * Math.sin(rad);
+      const x2 = centerX + rOuter * Math.cos(rad);
+      const y2 = centerY + rOuter * Math.sin(rad);
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", x1);
+      line.setAttribute("y1", y1);
+      line.setAttribute("x2", x2);
+      line.setAttribute("y2", y2);
+      line.setAttribute("stroke", "#4b5563");
+      line.setAttribute("stroke-width", isMajor ? 2 : 1.2);
+      line.setAttribute("stroke-linecap", "round");
+
+      svg.appendChild(line);
+
+      lines.push({ element: line, deg, isMajor });
+    }
+
+    return lines;
+  }
+
+  const pitchLines = createRadialRing("pitch-svg");
+  const rollLines = createRadialRing("roll-svg");
+
+  function classifyColour(angle) {
+    const abs = Math.abs(angle);
+    if (abs < 1) return "#22c55e";   // green
+    if (abs < 3) return "#f59e0b";   // amber
+    return "#ef4444";                // red
+  }
+
+  function updateRadialRing(lines, angle) {
+    // Find closest 5° segment to angle
+    let targetDeg = Math.round(angle / 5) * 5;
+    // Normalize to 0–360
+    targetDeg = ((targetDeg % 360) + 360) % 360;
+
+    const colour = classifyColour(angle);
+
+    lines.forEach(l => {
+      // base style
+      const baseWidth = l.isMajor ? 2 : 1.2;
+      l.element.setAttribute("stroke-width", baseWidth);
+      l.element.setAttribute("stroke", "#4b5563");
+    });
+
+    // Highlight target and neighbours
+    lines.forEach(l => {
+      const diff = Math.min(
+        Math.abs(l.deg - targetDeg),
+        360 - Math.abs(l.deg - targetDeg)
+      );
+
+      if (diff === 0) {
+        l.element.setAttribute("stroke-width", 4);
+        l.element.setAttribute("stroke", colour);
+      } else if (diff <= 10) {
+        l.element.setAttribute("stroke-width", l.isMajor ? 3 : 2);
+        l.element.setAttribute("stroke", colour);
+      }
+    });
+  }
+
   /* Angle update logic */
   function updateAngles(pitch, roll) {
     document.getElementById("pitch-readout").textContent = pitch.toFixed(1) + "°";
     document.getElementById("roll-readout").textContent = roll.toFixed(1) + "°";
 
-    const pitchRing = document.getElementById("pitch-ring");
-    const rollRing = document.getElementById("roll-ring");
-
-    function classify(angle) {
-      if (Math.abs(angle) < 1) return "green";
-      if (Math.abs(angle) < 3) return "amber";
-      return "red";
-    }
-
-    pitchRing.className = "ring " + classify(pitch);
-    rollRing.className = "ring " + classify(roll);
+    updateRadialRing(pitchLines, pitch);
+    updateRadialRing(rollLines, roll);
   }
 
   /* Demo movement */
   let demoAngle = 0;
   setInterval(() => {
-    demoAngle = (demoAngle + 0.2) % 6;
-    updateAngles(demoAngle - 3, (demoAngle * 0.7) - 2);
+    demoAngle = (demoAngle + 0.3) % 40; // small oscillation
+    const pitch = demoAngle - 20;       // -20 to +20
+    const roll = (demoAngle * 0.7) - 14;
+    updateAngles(pitch, roll);
   }, 500);
 
+  // Example connection mode
+  setConnection("wifi");
 </script>
 
 </body>
