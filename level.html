@@ -103,11 +103,11 @@
     height: 280px;
   }
 
-  .angle-readout {
-    margin-top: 6px;
-    font-size: 14px;
-    color: var(--muted);
-    text-align: center;
+  .angle-readout-inside {
+    font-size: 18px;
+    font-weight: 600;
+    fill: var(--muted);
+    text-anchor: middle;
   }
 
   /* Status Row */
@@ -156,14 +156,12 @@
     <div class="ring-block">
       <div class="ring-title">FRONT‑TO‑BACK (PITCH)</div>
       <svg id="pitch-svg" class="ring-svg" viewBox="0 0 280 280"></svg>
-      <div class="angle-readout" id="pitch-readout">0.0°</div>
     </div>
 
     <!-- Roll ADI-style gauge -->
     <div class="ring-block">
       <div class="ring-title">LEFT‑TO‑RIGHT (ROLL)</div>
       <svg id="roll-svg" class="ring-svg" viewBox="0 0 280 280"></svg>
-      <div class="angle-readout" id="roll-readout">0.0°</div>
     </div>
 
   </div>
@@ -186,7 +184,7 @@
     else { icon.style.color = "#ef4444"; icon.textContent = "✕"; }
   }
 
-  /* Classic ADI-style ring with tear-drop caravan icon */
+  /* ADI-style ring with tear-drop caravan icon + internal degree readout */
   function createAdiRing(svgId) {
     const svg = document.getElementById(svgId);
     const centerX = 140;
@@ -227,11 +225,12 @@
     const caravan = document.createElementNS("http://www.w3.org/2000/svg", "path");
 
     caravan.setAttribute("d",
-      "M 95 140 \
-       Q 95 110 140 110 \
-       Q 185 110 185 140 \
-       Q 185 170 140 170 \
-       Q 95 170 95 140 Z"
+      "M 100 150 \
+       Q 100 120 140 120 \
+       Q 180 120 180 150 \
+       Q 180 165 165 170 \
+       L 115 170 \
+       Q 100 165 100 150 Z"
     );
 
     caravan.setAttribute("fill", "#030712");
@@ -240,6 +239,16 @@
     caravan.setAttribute("id", svgId + "-caravan");
 
     svg.appendChild(caravan);
+
+    /* Degree readout inside ring */
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", centerX);
+    text.setAttribute("y", centerY + 55);
+    text.setAttribute("class", "angle-readout-inside");
+    text.setAttribute("id", svgId + "-readout");
+    text.textContent = "0.0°";
+
+    svg.appendChild(text);
 
     return lines;
   }
@@ -254,7 +263,7 @@
     return "#ef4444";
   }
 
-  function updateAdiRing(lines, angle, caravanId) {
+  function updateAdiRing(lines, angle, caravanId, readoutId) {
     let targetDeg = Math.round(angle / 5) * 5;
     targetDeg = ((targetDeg % 360) + 360) % 360;
 
@@ -283,14 +292,14 @@
 
     const caravan = document.getElementById(caravanId);
     caravan.setAttribute("transform", `rotate(${angle}, 140, 140)`);
+
+    const readout = document.getElementById(readoutId);
+    readout.textContent = angle.toFixed(1) + "°";
   }
 
   function updateAngles(pitch, roll) {
-    document.getElementById("pitch-readout").textContent = pitch.toFixed(1) + "°";
-    document.getElementById("roll-readout").textContent = roll.toFixed(1) + "°";
-
-    updateAdiRing(pitchLines, pitch, "pitch-svg-caravan");
-    updateAdiRing(rollLines, roll, "roll-svg-caravan");
+    updateAdiRing(pitchLines, pitch, "pitch-svg-caravan", "pitch-svg-readout");
+    updateAdiRing(rollLines, roll, "roll-svg-caravan", "roll-svg-readout");
   }
 
   let demoAngle = 0;
