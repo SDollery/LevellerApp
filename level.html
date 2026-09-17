@@ -99,8 +99,8 @@
   }
 
   .ring-svg {
-    width: 240px;
-    height: 240px;
+    width: 280px;
+    height: 280px;
   }
 
   .angle-readout {
@@ -155,14 +155,14 @@
     <!-- Pitch Ring -->
     <div class="ring-block">
       <div class="ring-title">FRONT‑TO‑BACK (PITCH)</div>
-      <svg id="pitch-svg" class="ring-svg" viewBox="0 0 240 240"></svg>
+      <svg id="pitch-svg" class="ring-svg" viewBox="0 0 280 280"></svg>
       <div class="angle-readout" id="pitch-readout">0.0°</div>
     </div>
 
     <!-- Roll Ring -->
     <div class="ring-block">
       <div class="ring-title">LEFT‑TO‑RIGHT (ROLL)</div>
-      <svg id="roll-svg" class="ring-svg" viewBox="0 0 240 240"></svg>
+      <svg id="roll-svg" class="ring-svg" viewBox="0 0 280 280"></svg>
       <div class="angle-readout" id="roll-readout">0.0°</div>
     </div>
 
@@ -186,15 +186,15 @@
     else { icon.style.color = "#ef4444"; icon.textContent = "✕"; }
   }
 
-  /* Create radial ring with shorter lines + caravan icon inside */
+  /* Create radial ring with shorter lines + larger diameter */
   function createRadialRing(svgId) {
     const svg = document.getElementById(svgId);
-    const centerX = 120;
-    const centerY = 120;
+    const centerX = 140;
+    const centerY = 140;
 
-    const outerRadius = 110;
-    const innerRadiusMajor = 80;   // shortened
-    const innerRadiusMinor = 90;   // shortened
+    const outerRadius = 130;       // larger ring
+    const innerRadiusMajor = 100;  // shorter lines
+    const innerRadiusMinor = 110;  // shorter lines
 
     const lines = [];
 
@@ -225,11 +225,11 @@
 
     /* Caravan icon inside ring */
     const caravan = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    caravan.setAttribute("x", centerX - 45);
-    caravan.setAttribute("y", centerY - 20);
-    caravan.setAttribute("width", 90);
-    caravan.setAttribute("height", 40);
-    caravan.setAttribute("rx", 8);
+    caravan.setAttribute("x", centerX - 55);
+    caravan.setAttribute("y", centerY - 25);
+    caravan.setAttribute("width", 110);
+    caravan.setAttribute("height", 50);
+    caravan.setAttribute("rx", 10);
     caravan.setAttribute("fill", "#030712");
     caravan.setAttribute("stroke", "#4b5563");
     caravan.setAttribute("stroke-width", 3);
@@ -279,7 +279,7 @@
 
     /* Tilt caravan icon */
     const caravan = document.getElementById(caravanId);
-    caravan.setAttribute("transform", `rotate(${angle}, 120, 120)`);
+    caravan.setAttribute("transform", `rotate(${angle}, 140, 140)`);
   }
 
   function updateAngles(pitch, roll) {
