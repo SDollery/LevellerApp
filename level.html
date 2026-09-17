@@ -152,14 +152,14 @@
 
   <div class="ring-container">
 
-    <!-- Pitch Ring -->
+    <!-- Pitch ADI-style gauge -->
     <div class="ring-block">
       <div class="ring-title">FRONT‑TO‑BACK (PITCH)</div>
       <svg id="pitch-svg" class="ring-svg" viewBox="0 0 280 280"></svg>
       <div class="angle-readout" id="pitch-readout">0.0°</div>
     </div>
 
-    <!-- Roll Ring -->
+    <!-- Roll ADI-style gauge -->
     <div class="ring-block">
       <div class="ring-title">LEFT‑TO‑RIGHT (ROLL)</div>
       <svg id="roll-svg" class="ring-svg" viewBox="0 0 280 280"></svg>
@@ -186,15 +186,15 @@
     else { icon.style.color = "#ef4444"; icon.textContent = "✕"; }
   }
 
-  /* Create radial ring with shorter lines + larger diameter */
-  function createRadialRing(svgId) {
+  /* Classic ADI-style ring: big outer ring, short ticks, caravan in centre */
+  function createAdiRing(svgId) {
     const svg = document.getElementById(svgId);
     const centerX = 140;
     const centerY = 140;
 
-    const outerRadius = 130;       // larger ring
-    const innerRadiusMajor = 100;  // shorter lines
-    const innerRadiusMinor = 110;  // shorter lines
+    const outerRadius = 130;        // big ring
+    const innerRadiusMajor = 118;   // very short ticks
+    const innerRadiusMinor = 122;   // very short ticks
 
     const lines = [];
 
@@ -216,14 +216,14 @@
       line.setAttribute("x2", x2);
       line.setAttribute("y2", y2);
       line.setAttribute("stroke", "#4b5563");
-      line.setAttribute("stroke-width", isMajor ? 2 : 1.2);
+      line.setAttribute("stroke-width", isMajor ? 2 : 1.4);
       line.setAttribute("stroke-linecap", "round");
 
       svg.appendChild(line);
       lines.push({ element: line, deg, isMajor });
     }
 
-    /* Caravan icon inside ring */
+    /* Caravan icon in centre (aircraft symbol analogue) */
     const caravan = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     caravan.setAttribute("x", centerX - 55);
     caravan.setAttribute("y", centerY - 25);
@@ -240,8 +240,8 @@
     return lines;
   }
 
-  const pitchLines = createRadialRing("pitch-svg");
-  const rollLines = createRadialRing("roll-svg");
+  const pitchLines = createAdiRing("pitch-svg");
+  const rollLines = createAdiRing("roll-svg");
 
   function classifyColour(angle) {
     const abs = Math.abs(angle);
@@ -250,14 +250,14 @@
     return "#ef4444";
   }
 
-  function updateRadialRing(lines, angle, caravanId) {
+  function updateAdiRing(lines, angle, caravanId) {
     let targetDeg = Math.round(angle / 5) * 5;
     targetDeg = ((targetDeg % 360) + 360) % 360;
 
     const colour = classifyColour(angle);
 
     lines.forEach(l => {
-      const baseWidth = l.isMajor ? 2 : 1.2;
+      const baseWidth = l.isMajor ? 2 : 1.4;
       l.element.setAttribute("stroke-width", baseWidth);
       l.element.setAttribute("stroke", "#4b5563");
     });
@@ -269,15 +269,14 @@
       );
 
       if (diff === 0) {
-        l.element.setAttribute("stroke-width", 4);
+        l.element.setAttribute("stroke-width", 4.5);
         l.element.setAttribute("stroke", colour);
       } else if (diff <= 10) {
-        l.element.setAttribute("stroke-width", l.isMajor ? 3 : 2);
+        l.element.setAttribute("stroke-width", l.isMajor ? 3.2 : 2.2);
         l.element.setAttribute("stroke", colour);
       }
     });
 
-    /* Tilt caravan icon */
     const caravan = document.getElementById(caravanId);
     caravan.setAttribute("transform", `rotate(${angle}, 140, 140)`);
   }
@@ -286,8 +285,8 @@
     document.getElementById("pitch-readout").textContent = pitch.toFixed(1) + "°";
     document.getElementById("roll-readout").textContent = roll.toFixed(1) + "°";
 
-    updateRadialRing(pitchLines, pitch, "pitch-svg-caravan");
-    updateRadialRing(rollLines, roll, "roll-svg-caravan");
+    updateAdiRing(pitchLines, pitch, "pitch-svg-caravan");
+    updateAdiRing(rollLines, roll, "roll-svg-caravan");
   }
 
   let demoAngle = 0;
